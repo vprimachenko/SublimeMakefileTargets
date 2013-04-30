@@ -3,10 +3,10 @@ import sublime, sublime_plugin, os, re
 # * Only Makefile supported
 # * No sticking to project defined paths (simply traverses the tree)
 # * Always asks what to run, if there is more than one option (no quickrun)
-class MakeTargetableExecCommand(sublime_plugin.WindowCommand):
+class MakeTargetableExecCommand(sublime_plugin.ApplicationCommand):
 	# Settings:
 	# * what should be matched in makefile
-	targetMatch = re.compile("^([a-z_]+):")
+	targetMatch = re.compile("^([a-z_]+)\s?:")
 	# Session
 	# * storage for per-buildfile "default" indexes
 	instanceRunIndexes = {}
@@ -17,7 +17,7 @@ class MakeTargetableExecCommand(sublime_plugin.WindowCommand):
 		except KeyError:
 			pass
 
-		view = self.window.active_view()
+		view = sublime.active_window().active_view()
 		buildfile = self.get_nearest_buildfile(view.file_name())
 		if not buildfile:
 			return
@@ -29,7 +29,7 @@ class MakeTargetableExecCommand(sublime_plugin.WindowCommand):
 			def on_select(index):
 				self.set_default_build_index(buildfile, index)
 				self.quick_panel_callback(buildfile, targets, index, kwargs)
-			self.window.show_quick_panel(targets, on_select, 0, self.get_default_build_index(buildfile))
+			sublime.active_window().show_quick_panel(targets, on_select, 0, self.get_default_build_index(buildfile))
 		elif len(targets) == 1:
 			self.quick_panel_callback(buildfile, targets, 0, kwargs)
 
@@ -76,4 +76,4 @@ class MakeTargetableExecCommand(sublime_plugin.WindowCommand):
 			"cmd": ["make", targets[index]],
 			"working_dir": os.path.dirname(buildfile)
 		})
-		self.window.run_command("exec", task)
+		sublime.active_window().run_command("exec", task)
